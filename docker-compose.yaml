@@ -71,4 +71,4 @@ services:
     networks:
       - default
     depends_on:
-      - postgres
+      - app-backend
