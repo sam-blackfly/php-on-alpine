@@ -1,0 +1,74 @@
+version: '3.7'
+
+networks:
+  default:
+
+volumes:
+  pgdata:
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:alpine
+    restart: unless-stopped
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: larademo
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - default
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "admin@example.com"
+      PGADMIN_DEFAULT_PASSWORD: "admin"
+    ports:
+      - 8082:80
+    networks:
+      - default
+    depends_on:
+      - postgres
+
+  app-backend:
+    build:
+      context: ./services/backend
+      dockerfile: Dockerfile.dev
+    container_name: app-backend
+    image: devilas/app-backend:latest
+    restart: unless-stopped
+    ports:
+      - 8081:8080
+    volumes:
+      - ./services/backend:/app
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: test
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+    networks:
+      - default
+    depends_on:
+      - postgres
+
+  app-frontend:
+    build:
+      context: ./services/frontend
+      dockerfile: Dockerfile.dev
+    container_name: app-frontend
+    image: devilas/app-frontend:latest
+    restart: unless-stopped
+    ports:
+      - 8080:8080
+    volumes:
+      - ./services/frontend:/app
+    networks:
+      - default
+    depends_on:
+      - postgres
